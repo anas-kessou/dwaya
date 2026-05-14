@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Information about the user",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "createdAt": { "type": "number", "description": "Timestamp" },
+        "updatedAt": { "type": "number", "description": "Timestamp" }
+      },
+      "required": ["email", "createdAt", "updatedAt"]
+    },
+    "MedicalProfile": {
+      "title": "Medical Profile",
+      "description": "Medical information for the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "bloodType": { "type": "string" },
+        "allergies": { "type": "string" },
+        "chronicConditions": { "type": "string" },
+        "emergencyContactName": { "type": "string" },
+        "emergencyContactPhone": { "type": "string" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "updatedAt"]
+    },
+    "Medication": {
+      "title": "Medication",
+      "description": "A scheduled medication for the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "dosage": { "type": "string" },
+        "quantity": { "type": "number" },
+        "layer": { "type": "string", "enum": ["matin", "apres-midi", "soir"] },
+        "startDate": { "type": "string" },
+        "durationDays": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "name", "dosage", "quantity", "layer", "startDate", "durationDays", "createdAt", "updatedAt"]
+    },
+    "Analysis": {
+      "title": "Analysis",
+      "description": "Medical analysis entries (BP, Blood sugar, Temp)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string", "enum": ["tension", "glycemie", "temperature"] },
+        "systolique": { "type": "number" },
+        "diastolique": { "type": "number" },
+        "taux": { "type": "number" },
+        "temperature": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "date", "time", "type", "createdAt", "updatedAt"]
+    },
+    "MedicationHistory": {
+      "title": "Medication History",
+      "description": "Log of medications taken or missed",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "medicationId": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["taken", "missed"] },
+        "layer": { "type": "string", "enum": ["matin", "apres-midi", "soir"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "medicationId", "date", "time", "status", "layer", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile document."
+    },
+    "/medicalProfiles/{userId}": {
+      "schema": { "$ref": "#/entities/MedicalProfile" },
+      "description": "Medical profile containing blood type, allergies, etc."
+    },
+    "/medications/{medicationId}": {
+      "schema": { "$ref": "#/entities/Medication" },
+      "description": "Medications added by the user."
+    },
+    "/analyses/{analysisId}": {
+      "schema": { "$ref": "#/entities/Analysis" },
+      "description": "Health analysis data."
+    },
+    "/history/{historyId}": {
+      "schema": { "$ref": "#/entities/MedicationHistory" },
+      "description": "Logs of when medications were taken."
+    }
+  }
+}

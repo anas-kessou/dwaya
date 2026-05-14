@@ -1,0 +1,199 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Definition
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // User validation
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['email', 'createdAt', 'updatedAt']) && 
+             data.keys().size() == 3 &&
+             data.email is string && data.email.size() <= 256 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time;
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+    }
+
+    // Medical Profile validation
+    function isValidMedicalProfile(data) {
+      return data.keys().hasAll(['userId', 'updatedAt']) && 
+             data.userId == request.auth.uid &&
+             data.updatedAt is timestamp &&
+             (data.keys().hasAny(['bloodType']) ? (data.bloodType is string && data.bloodType.size() <= 10) : true) &&
+             (data.keys().hasAny(['allergies']) ? (data.allergies is string && data.allergies.size() <= 1000) : true) &&
+             (data.keys().hasAny(['chronicConditions']) ? (data.chronicConditions is string && data.chronicConditions.size() <= 1000) : true) &&
+             (data.keys().hasAny(['emergencyContactName']) ? (data.emergencyContactName is string && data.emergencyContactName.size() <= 128) : true) &&
+             (data.keys().hasAny(['emergencyContactPhone']) ? (data.emergencyContactPhone is string && data.emergencyContactPhone.size() <= 32) : true) &&
+             (data.keys().hasAny(['weight']) ? (data.weight is number && data.weight >= 0) : true) &&
+             (data.keys().hasAny(['height']) ? (data.height is number && data.height >= 0) : true);
+    }
+
+    match /medicalProfiles/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidMedicalProfile(incoming()) &&
+                       incoming().updatedAt == request.time;
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidMedicalProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['bloodType', 'allergies', 'chronicConditions', 'emergencyContactName', 'emergencyContactPhone', 'weight', 'height', 'updatedAt']);
+    }
+
+    // Medication Validation
+    function isValidMedication(data) {
+      return data.keys().hasAll(['userId', 'name', 'dosage', 'quantity', 'layer', 'startDate', 'durationDays', 'createdAt', 'updatedAt']) && 
+             data.keys().size() == 9 &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.dosage is string && data.dosage.size() <= 50 &&
+             data.quantity is number && data.quantity > 0 && data.quantity <= 100 &&
+             data.layer is string && (data.layer == 'matin' || data.layer == 'apres-midi' || data.layer == 'soir') &&
+             data.startDate is string && data.startDate.size() <= 20 &&
+             data.durationDays is number && data.durationDays > 0 && data.durationDays <= 365 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    match /medications/{medicationId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      
+      allow create: if isSignedIn() &&
+                       isValidId(medicationId) &&
+                       isValidMedication(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time;
+                       
+      allow update: if isSignedIn() &&
+                       isValidId(medicationId) &&
+                       existing().userId == request.auth.uid &&
+                       isValidMedication(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'dosage', 'quantity', 'layer', 'startDate', 'durationDays', 'updatedAt']);
+                       
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // Analysis Validation
+    function isValidAnalysis(data) {
+      return data.keys().hasAll(['userId', 'date', 'time', 'type', 'createdAt', 'updatedAt']) &&
+             data.userId == request.auth.uid &&
+             data.date is string && data.date.size() <= 20 &&
+             data.time is string && data.time.size() <= 20 &&
+             data.type is string && (data.type == 'tension' || data.type == 'glycemie' || data.type == 'temperature') &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (
+               (data.type == 'tension' && data.keys().hasAll(['systolique', 'diastolique']) && data.systolique is number && data.diastolique is number && data.keys().size() == 8) ||
+               (data.type == 'glycemie' && data.keys().hasAll(['taux']) && data.taux is number && data.keys().size() == 7) ||
+               (data.type == 'temperature' && data.keys().hasAll(['temperature']) && data.temperature is number && data.keys().size() == 7)
+             );
+    }
+
+    match /analyses/{analysisId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      
+      allow create: if isSignedIn() &&
+                       isValidId(analysisId) &&
+                       isValidAnalysis(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time;
+                       
+      allow update: if isSignedIn() &&
+                       isValidId(analysisId) &&
+                       existing().userId == request.auth.uid &&
+                       isValidAnalysis(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['date', 'time', 'type', 'systolique', 'diastolique', 'taux', 'temperature', 'updatedAt']);
+                       
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // History Validation
+    function isValidHistory(data) {
+      return data.keys().hasAll(['userId', 'medicationId', 'date', 'time', 'status', 'layer', 'createdAt']) &&
+             data.keys().size() == 7 &&
+             data.userId == request.auth.uid &&
+             data.medicationId is string && data.medicationId.size() <= 128 &&
+             data.date is string && data.date.size() <= 20 &&
+             data.time is string && data.time.size() <= 20 &&
+             data.status is string && (data.status == 'taken' || data.status == 'missed') &&
+             data.layer is string && (data.layer == 'matin' || data.layer == 'apres-midi' || data.layer == 'soir') &&
+             data.createdAt is timestamp;
+    }
+
+    match /history/{historyId} {
+      // Must verify the medication exists and belongs to the user to avoid orphaned writes, 
+      // but to keep it simple, we check medication in UI. Let's use get() to enforce relational integrity.
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      
+      allow create: if isSignedIn() &&
+                       isValidId(historyId) &&
+                       isValidHistory(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       // Relational check: medication belongs to user
+                       exists(/databases/$(database)/documents/medications/$(incoming().medicationId)) &&
+                       get(/databases/$(database)/documents/medications/$(incoming().medicationId)).data.userId == request.auth.uid;
+                       
+      allow update: if isSignedIn() &&
+                       isValidId(historyId) &&
+                       existing().userId == request.auth.uid &&
+                       isValidHistory(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().medicationId == existing().medicationId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'date', 'time']); // status might change from missed to taken
+                       
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}
