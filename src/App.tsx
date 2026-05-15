@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
 import { AddMedication } from './pages/AddMedication';
 import { Analyses } from './pages/Analyses';
 import { History } from './pages/History';
@@ -28,6 +30,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/add-medication" element={<AddMedication />} />

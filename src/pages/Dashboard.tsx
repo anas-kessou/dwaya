@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import clsx from 'clsx';
 import { collection, query, where, getDocs, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { ref, onValue } from 'firebase/database';
+import { db, rtdb, handleFirestoreError, OperationType } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
@@ -9,6 +11,7 @@ export function Dashboard() {
   const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
   const [medications, setMedications] = useState<any[]>([]);
+  const [sensors, setSensors] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -23,6 +26,14 @@ export function Dashboard() {
 
     return () => unsubscribe();
   }, [user]);
+
+  useEffect(() => {
+    const sensorRef = ref(rtdb, 'sensors/box_001');
+    const unsubscribe = onValue(sensorRef, (snapshot) => {
+      setSensors(snapshot.val());
+    });
+    return () => unsubscribe();
+  }, []);
 
   const activeCylindersCount = new Set(medications.map(m => m.layer)).size;
 
@@ -64,6 +75,39 @@ export function Dashboard() {
             </div>
             
             <p className="text-center mt-12 text-on-surface-variant font-label-md z-10">{activeCylindersCount} compartiments actifs</p>
+          </div>
+
+          {/* Smart Box Sensors Section */}
+          <div className="bg-surface-container p-6 rounded-lg border border-outline-variant/30 space-y-4">
+            <h3 className="font-label-xl text-label-xl text-primary flex items-center gap-2">
+              <span className="material-symbols-outlined">sensors</span>
+              État de la Box (RTDB)
+            </h3>
+            {sensors ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/20">
+                  <p className="text-xs text-on-surface-variant uppercase font-bold">Température</p>
+                  <p className="text-2xl font-bold text-primary">{sensors.temperature}°C</p>
+                </div>
+                <div className="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/20">
+                  <p className="text-xs text-on-surface-variant uppercase font-bold">Mouvement</p>
+                  <p className={clsx("text-2xl font-bold", sensors.mouvement ? "text-error" : "text-secondary")}>
+                    {sensors.mouvement ? 'Actif' : 'Calme'}
+                  </p>
+                </div>
+                <div className="col-span-2 bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/20 flex justify-between items-center">
+                  <div>
+                    <p className="text-xs text-on-surface-variant uppercase font-bold">Colis Présent</p>
+                    <p className="font-bold text-lg">{sensors.colisPresent ? 'Oui' : 'Non'}</p>
+                  </div>
+                  <span className={clsx("material-symbols-outlined text-4xl", sensors.colisPresent ? "text-secondary" : "text-outline-variant")}>
+                    {sensors.colisPresent ? 'package_2' : 'inventory_2'}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-on-surface-variant text-sm italic">En attente des données capteurs...</p>
+            )}
           </div>
         </div>
 

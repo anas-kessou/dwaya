@@ -32,7 +32,7 @@ export function DashboardLayout() {
       {/* Top AppBar */}
       <header className="fixed top-0 w-full flex justify-between items-center px-container-padding h-touch-target-min bg-surface/80 backdrop-blur-md z-50 border-b border-outline-variant/30 shadow-sm lg:left-72 lg:w-[calc(100%-18rem)]">
         <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="DWAYA" className="h-8 lg:hidden" />
+          <img src="/logo.jpeg" alt="DWAYA" className="h-10 rounded-lg" />
           <h1 className="hidden lg:block font-headline-md text-headline-md text-primary">Bonjour, {userName}</h1>
         </div>
         <div className="flex items-center gap-unit">
@@ -48,7 +48,10 @@ export function DashboardLayout() {
       {/* SideNavBar (Desktop Only) */}
       <aside className="fixed left-0 top-0 h-full w-72 bg-surface-container-low border-r border-outline-variant/20 shadow-md hidden lg:flex flex-col gap-stack-gap p-6 z-50">
         <div className="flex flex-col gap-unit mb-8 px-4">
-          <img src="/logo.png" alt="DWAYA" className="h-8" />
+          <div className="flex items-center gap-3">
+            <img src="/logo.jpeg" alt="DWAYA" className="h-12 w-12 rounded-lg shadow-sm object-cover" />
+            <h2 className="font-headline-md text-headline-md text-primary tracking-tight">DWAYA</h2>
+          </div>
           <div className="flex items-center gap-4 mt-6 p-4 bg-surface rounded-lg border border-outline-variant/10">
             <div className="w-12 h-12 rounded-full overflow-hidden">
               <img src={avatarUrl} alt={`${userName}'s Avatar`} className="w-full h-full object-cover" />

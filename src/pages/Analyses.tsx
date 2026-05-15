@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,16 +14,37 @@ export function Analyses() {
   const [glycemie, setGlycemie] = useState('');
   const [temperature, setTemperature] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [chartData, setChartData] = useState<any[]>([]);
 
-  const data = [
-    { day: 'Lun', value: 120 },
-    { day: 'Mar', value: 130 },
-    { day: 'Mer', value: 110 },
-    { day: 'Jeu', value: 135 },
-    { day: 'Ven', value: 125 },
-    { day: 'Sam', value: 140 },
-    { day: 'Dim', value: 128 },
-  ];
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, 'analyses'),
+      where('userId', '==', user.uid),
+      where('type', '==', 'tension'),
+      orderBy('date', 'desc'),
+      limit(7)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const formattedData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const dateObj = new Date(data.date);
+        const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+        return {
+          day: dayNames[dateObj.getDay()],
+          value: data.systolique,
+          fullDate: data.date
+        };
+      }).reverse();
+      setChartData(formattedData);
+    }, (error) => {
+      console.error("Error fetching analysis data:", error);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleSave = async (type: 'tension' | 'glycemie' | 'temperature') => {
     if (!user || isSubmitting) return;
@@ -230,7 +251,7 @@ export function Analyses() {
 
         <div className="w-full h-64 bg-surface-container/30 rounded-lg p-4">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
+            <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#0058be" stopOpacity={0.3}/>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 
@@ -26,9 +26,8 @@ export function Login() {
         <div className="max-w-[560px] w-full flex flex-col items-center space-y-12">
           
           <header className="w-full flex flex-col items-center text-center space-y-8">
-            <div className="w-48 h-48 md:w-64 md:h-64 flex items-center justify-center text-primary">
-              {/* Replace with actual logo if needed, using material icons for now as an approximation */}
-              <span className="material-symbols-outlined text-[120px] md:text-[180px]">medication</span>
+            <div className="w-48 h-48 md:w-64 md:h-64 flex items-center justify-center p-4">
+              <img src="/logo.jpeg" alt="DWAYA Logo" className="w-full h-full object-contain rounded-2xl shadow-xl" />
             </div>
             <div className="space-y-4">
               <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">
@@ -91,7 +90,7 @@ export function Login() {
 
           <footer className="w-full text-center pb-8">
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Pas encore de compte ? <a className="text-primary font-bold hover:underline" href="#">Inscrivez-vous ici</a>
+              Pas encore de compte ? <Link className="text-primary font-bold hover:underline" to="/signup">Inscrivez-vous ici</Link>
             </p>
             <div className="mt-12 flex justify-center gap-8 font-label-md text-label-md text-outline">
               <a className="hover:text-primary transition-colors" href="#">Confidentialité</a>
