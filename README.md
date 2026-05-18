@@ -1,14 +1,6 @@
 # DWAYA - Smart Medication Management System
 
-<div align="center">
-  <img width="1200" height="475" alt="DWAYA Dashboard" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-  
-  [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-  [![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-  [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Database-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.x-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-  [![Netlify](https://img.shields.io/badge/Netlify-Deployed-00C7B7?logo=netlify&logoColor=white)](https://www.netlify.com/)
-</div>
+
 
 ## 🌟 Overview
 
