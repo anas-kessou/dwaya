@@ -21,13 +21,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Ensure user profile exists
         try {
           const userRef = doc(db, 'users', currentUser.uid);
-          const userSnap = await getDoc(userRef).catch(e => handleFirestoreError(e, OperationType.GET, 'users/' + currentUser.uid));
-          if (!userSnap?.exists()) {
+          const userSnap = await getDoc(userRef).catch(e => {
+            handleFirestoreError(e, OperationType.GET, 'users/' + currentUser.uid);
+            return null;
+          });
+          if (userSnap && !userSnap.exists()) {
             await setDoc(userRef, {
               email: currentUser.email || '',
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
-            }).catch(e => handleFirestoreError(e, OperationType.CREATE, 'users/' + currentUser.uid));
+            }).catch(e => {
+              handleFirestoreError(e, OperationType.CREATE, 'users/' + currentUser.uid);
+            });
           }
         } catch (e) {
           console.error("Error setting up user profile", e);

@@ -4,14 +4,19 @@ import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestor
 import { getDatabase, ref, set } from 'firebase/database';
 
 // trbt fireebase
+// Check for missing environment variables
+if (!import.meta.env.VITE_FIREBASE_API_KEY) {
+  console.warn("ATTENTION: VITE_FIREBASE_API_KEY est manquant. Vérifiez vos variables d'environnement.");
+}
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'missing',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'missing',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'missing'
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -20,7 +25,7 @@ export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
 
-console.log("Firebase connected ");
+console.log("Firebase initialized");
 
 // code dyal user
 export const saveUserToFirestore = async (uid: string, email: string) => {
@@ -46,11 +51,25 @@ export const createBox = async (boxId: string, userId: string) => {
       colisPresent: false,
       temperature: 0,
       mouvement: false,
+      ledStatus: "off",
+      command: null,
       lastUpdated: new Date()
     });
     console.log("Box créée dans Firestore ");
   } catch (error) {
     console.error("Error creating box: ", error);
+  }
+};
+
+export const sendBoxCommand = async (boxId: string, command: string) => {
+  try {
+    await setDoc(doc(db, "boxes", boxId), {
+      command: command,
+      lastUpdated: new Date()
+    }, { merge: true });
+    console.log("Commande envoyée : ", command);
+  } catch (error) {
+    console.error("Error sending command: ", error);
   }
 };
 
@@ -121,7 +140,7 @@ interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): void {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -133,6 +152,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  console.error('Firestore Error details: ', errInfo);
+  // Do NOT throw here, it crashes the app. Just log it.
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType, sendBoxCommand } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function AddMedication() {
@@ -15,6 +15,12 @@ export function AddMedication() {
   const [startDate, setStartDate] = useState('');
   const [durationDays, setDurationDays] = useState(7);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [selectedLevel, setSelectedLevel] = useState(0);
+
+  const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const levels = ['Matin', 'Après-midi', 'Soir'];
 
   const handleSubmit = async () => {
     if (!user || isSubmitting) return;
@@ -45,11 +51,31 @@ export function AddMedication() {
     }
   };
 
+  const handleLoadMedicament = async () => {
+    try {
+      const command = `OPEN:${selectedDay}:${selectedLevel}`;
+      await sendBoxCommand('box_001', command);
+      setShowLoader(false);
+      alert(`Commande ${command} envoyée ! Le compartiment va s'ouvrir.`);
+    } catch (e) {
+      alert('Erreur lors de l\'envoi de la commande.');
+    }
+  };
+
   return (
     <main className="pt-24 pb-32 px-4 lg:px-container-padding max-w-6xl mx-auto space-y-stack-gap">
-      <section className="mb-stack-gap">
-        <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Ajouter un médicament</h2>
-        <p className="font-body-lg text-body-lg text-on-surface-variant">Configurez votre nouveau rappel de santé étape par étape.</p>
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-stack-gap">
+        <div>
+          <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Ajouter un médicament</h2>
+          <p className="font-body-lg text-body-lg text-on-surface-variant">Configurez votre nouveau rappel de santé étape par étape.</p>
+        </div>
+        <button 
+          onClick={() => setShowLoader(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-secondary text-white rounded-full font-label-xl shadow-lg hover:brightness-110 transition-all active:scale-95 self-start md:self-center"
+        >
+          <span className="material-symbols-outlined">settings_input_component</span>
+          Chargement Manuel
+        </button>
       </section>
 
       {/* Bento Grid Layout for Form */}
@@ -232,6 +258,73 @@ export function AddMedication() {
           </button>
         </div>
       </div>
+
+      {/* Loader Modal */}
+      {showLoader && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-left">
+          <div className="bg-surface-bright w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-outline-variant animate-in fade-in zoom-in duration-300">
+            <div className="bg-primary p-6 text-on-primary flex justify-between items-center">
+              <h3 className="font-headline-sm text-headline-sm flex items-center gap-2 text-white">
+                <span className="material-symbols-outlined">settings_input_component</span>
+                Chargement Manuel
+              </h3>
+              <button onClick={() => setShowLoader(false)} className="material-symbols-outlined hover:bg-white/20 p-2 rounded-full transition-colors text-white">close</button>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div>
+                <label className="block text-label-xl font-label-xl mb-3 text-on-surface text-left">Sélectionner le Jour</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {days.map((day, idx) => (
+                    <button 
+                      key={day}
+                      onClick={() => setSelectedDay(idx)}
+                      className={clsx(
+                        "py-2 px-1 text-xs font-bold rounded-lg border-2 transition-all",
+                        selectedDay === idx ? "bg-primary border-primary text-on-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:border-primary/50"
+                      )}
+                    >
+                      {day.slice(0, 3)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-label-xl font-label-xl mb-3 text-on-surface text-left">Sélectionner le Moment</label>
+                <div className="flex gap-2">
+                  {levels.map((level, idx) => (
+                    <button 
+                      key={level}
+                      onClick={() => setSelectedLevel(idx)}
+                      className={clsx(
+                        "flex-1 py-4 flex flex-col items-center gap-1 rounded-xl border-2 transition-all",
+                        selectedLevel === idx ? "bg-secondary-container border-secondary text-on-secondary-container" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:border-secondary/50"
+                      )}
+                    >
+                      <span className="material-symbols-outlined">
+                        {idx === 0 ? 'light_mode' : idx === 1 ? 'sunny' : 'bedtime'}
+                      </span>
+                      <span className="text-xs font-bold">{level}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button 
+                  onClick={handleLoadMedicament}
+                  className="w-full py-4 bg-primary text-on-primary rounded-xl font-headline-sm shadow-xl hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95 text-white"
+                >
+                  <span className="material-symbols-outlined">rocket_launch</span>
+                  Ouvrir Compartiment
+                </button>
+                <p className="text-[10px] text-center mt-4 text-on-surface-variant uppercase tracking-widest font-bold">L'index {selectedDay}:{selectedLevel} sera ouvert</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
