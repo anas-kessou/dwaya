@@ -16,6 +16,7 @@ import { History } from './pages/History';
 import { Settings } from './pages/Settings';
 
 import { MedicalProfile } from './pages/MedicalProfile';
+import Landing from './pages/Landing';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -29,10 +30,11 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/add-medication" element={<AddMedication />} />
             <Route path="/analyses" element={<Analyses />} />
             <Route path="/history" element={<History />} />

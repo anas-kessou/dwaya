@@ -8,13 +8,13 @@ export function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/"); // Redirect to home
+    navigate("/dashboard"); // Redirect to dashboard
   };
 
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Google sign in failed", error);
     }

@@ -31,7 +31,7 @@ export function Signup() {
         createdAt: new Date()
       });
       
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Signup failed", error);
       setError(error.message);
@@ -51,7 +51,7 @@ export function Signup() {
         createdAt: new Date()
       }, { merge: true });
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Google sign in failed", error);
     }

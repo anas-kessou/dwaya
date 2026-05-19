@@ -79,4 +79,45 @@
     .material-symbols-outlined.fill-icon {
         font-variation-settings: 'FILL' 1;
     }
+
+    .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-dark {
+        background: rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .text-gradient {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .animate-tilt {
+        animation: tilt 10s linear infinite;
+    }
+
+    @keyframes tilt {
+        0%, 100% { transform: rotate3d(0); }
+        25% { transform: rotate3d(1, 1, 0, 5deg); }
+        50% { transform: rotate3d(0, 1, 1, 5deg); }
+        75% { transform: rotate3d(1, 0, 1, 5deg); }
+    }
 }

@@ -15,7 +15,7 @@ export function DashboardLayout() {
   const avatarUrl = user?.photoURL || DUMMY_AVATAR;
 
   const navItems = [
-    { name: 'Home', path: '/', icon: 'home' },
+    { name: 'Home', path: '/dashboard', icon: 'home' },
     { name: 'Add Medication', path: '/add-medication', icon: 'add_circle', mobileIcon: 'add_box' },
     { name: 'Analyses', path: '/analyses', icon: 'analytics', mobileIcon: 'monitoring' },
     { name: 'History', path: '/history', icon: 'history' },
