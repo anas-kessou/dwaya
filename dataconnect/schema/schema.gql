@@ -1,0 +1,45 @@
+type User @table {
+  displayName: String!
+  createdAt: Timestamp!
+  email: String
+  photoUrl: String
+  timezone: String
+}
+
+type Medication @table {
+  user: User!
+  name: String!
+  dosage: String!
+  frequency: String!
+  startDate: Date!
+  createdAt: Timestamp!
+  instructions: String
+  notes: String
+  endDate: Date
+}
+
+type Reminder @table {
+  medication: Medication!
+  time: String! # e.g., "10:00", "14:30"
+  daysOfWeek: String! # e.g., "Monday, Wednesday, Friday"
+  createdAt: Timestamp!
+}
+
+type IntakeRecord @table {
+  medication: Medication!
+  scheduledTime: Timestamp!
+  actualTime: Timestamp
+  status: String! # e.g., "Taken", "Skipped"
+  createdAt: Timestamp!
+}
+
+type Appointment @table {
+  user: User!
+  title: String!
+  date: Date!
+  time: String! # e.g., "10:00", "14:30"
+  doctorName: String!
+  createdAt: Timestamp!
+  location: String
+  notes: String
+}

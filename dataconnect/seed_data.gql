@@ -1,0 +1,115 @@
+mutation CreateDemoData @transaction @auth(level: USER, insecureReason: "This operation is for seeding data and will be restricted in production.") {
+  user_insertMany(data: [
+    {
+      id: "a1a1a1a1-b2b2-c3c3-d4d4-e5e5e5e5e5e5",
+      displayName: "Alice Smith",
+      email: "alice.smith@example.com",
+      createdAt: "2023-01-01T10:00:00Z",
+      timezone: "America/New_York"
+    },
+    {
+      id: "f6f6f6f6-g7g7-h8h8-i9i9-j0j0j0j0j0j0",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      createdAt: "2023-01-01T10:05:00Z",
+      timezone: "America/Los_Angeles"
+    }
+  ])
+  medication_insertMany(data: [
+    {
+      id: "k1k1k1k1-l2l2-m3m3-n4n4-o5o5o5o5o5o5",
+      userId: "a1a1a1a1-b2b2-c3c3-d4d4-e5e5e5e5e5e5",
+      name: "Paracetamol",
+      dosage: "500mg",
+      frequency: "Twice daily",
+      startDate: "2023-01-05",
+      createdAt: "2023-01-05T12:00:00Z",
+      instructions: "Take with food.",
+      endDate: "2023-01-12"
+    },
+    {
+      id: "p6p6p6p6-q7q7-r8r8-s9s9-t0t0t0t0t0t0",
+      userId: "a1a1a1a1-b2b2-c3c3-d4d4-e5e5e5e5e5e5",
+      name: "Ibuprofen",
+      dosage: "200mg",
+      frequency: "As needed",
+      startDate: "2023-01-08",
+      createdAt: "2023-01-08T09:30:00Z",
+      notes: "For headache."
+    },
+    {
+      id: "u1u1u1u1-v2v2-w3w3-x4x4-y5y5y5y5y5y5",
+      userId: "f6f6f6f6-g7g7-h8h8-i9i9-j0j0j0j0j0j0",
+      name: "Amoxicillin",
+      dosage: "250mg",
+      frequency: "Three times daily",
+      startDate: "2023-01-10",
+      createdAt: "2023-01-10T14:00:00Z",
+      instructions: "Finish the entire course."
+    }
+  ])
+  reminder_insertMany(data: [
+    {
+      id: "z1z1z1z1-a2a2-b3b3-c4c4-d5d5d5d5d5d5",
+      medicationId: "k1k1k1k1-l2l2-m3m3-n4n4-o5o5o5o5o5o5",
+      time: "08:00",
+      daysOfWeek: "MON,WED,FRI",
+      createdAt: "2023-01-05T12:01:00Z"
+    },
+    {
+      id: "e6e6e6e6-f7f7-g8g8-h9h9-i0i0i0i0i0i0",
+      medicationId: "k1k1k1k1-l2l2-m3m3-n4n4-o5o5o5o5o5o5",
+      time: "20:00",
+      daysOfWeek: "MON,WED,FRI",
+      createdAt: "2023-01-05T12:02:00Z"
+    },
+    {
+      id: "j1j1j1j1-k2k2-l3l3-m4m4-n5n5n5n5n5n5",
+      medicationId: "u1u1u1u1-v2v2-w3w3-x4x4-y5y5y5y5y5y5",
+      time: "09:00",
+      daysOfWeek: "MON,TUE,WED,THU,FRI",
+      createdAt: "2023-01-10T14:01:00Z"
+    }
+  ])
+  intakeRecord_insertMany(data: [
+    {
+      id: "o6o6o6o6-p7p7-q8q8-r9r9-s0s0s0s0s0s0",
+      medicationId: "k1k1k1k1-l2l2-m3m3-n4n4-o5o5o5o5o5o5",
+      scheduledTime: "2023-01-06T08:00:00Z",
+      actualTime: "2023-01-06T08:05:00Z",
+      status: "Taken",
+      createdAt: "2023-01-06T08:05:00Z"
+    },
+    {
+      id: "t1t1t1t1-u2u2-v3v3-w4w4-x5x5x5x5x5x5",
+      medicationId: "u1u1u1u1-v2v2-w3w3-x4x4-y5y5y5y5y5y5",
+      scheduledTime: "2023-01-11T09:00:00Z",
+      actualTime: "2023-01-11T09:10:00Z",
+      status: "Taken",
+      createdAt: "2023-01-11T09:10:00Z"
+    }
+  ])
+  appointment_insertMany(data: [
+    {
+      id: "y6y6y6y6-z7z7-a8a8-b9b9-c0c0c0c0c0c0",
+      userId: "a1a1a1a1-b2b2-c3c3-d4d4-e5e5e5e5e5e5",
+      title: "Annual Check-up",
+      date: "2023-02-15",
+      time: "10:00",
+      doctorName: "Dr. Smith",
+      location: "Main Clinic",
+      notes: "Remember to bring medical records.",
+      createdAt: "2023-01-15T11:00:00Z"
+    },
+    {
+      id: "d1d1d1d1-e2e2-f3f3-g4g4-h5h5h5h5h5h5",
+      userId: "f6f6f6f6-g7g7-h8h8-i9i9-j0j0j0j0j0j0",
+      title: "Dental Appointment",
+      date: "2023-03-20",
+      time: "14:30",
+      doctorName: "Dr. Jones",
+      location: "Dental Office",
+      createdAt: "2023-02-01T09:00:00Z"
+    }
+  ])
+}

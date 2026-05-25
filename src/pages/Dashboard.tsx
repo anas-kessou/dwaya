@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { ref, onValue } from 'firebase/database';
-import { db, rtdb, handleFirestoreError, OperationType, sendBoxCommand } from '../lib/firebase';
+import { db, rtdb, handleFirestoreError, OperationType, sendBoxCommand, triggerAlarm, stopAlarm, onAlarmStatus } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
@@ -16,6 +16,7 @@ export function Dashboard() {
   const [showLoader, setShowLoader] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0); // 0-6
   const [selectedLevel, setSelectedLevel] = useState(0); // 0-2 (Morning, Afternoon, Night)
+  const [alarmActive, setAlarmActive] = useState(false);
 
   const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
   const levels = ['Matin', 'Après-midi', 'Soir'];
@@ -50,6 +51,14 @@ export function Dashboard() {
     const sensorRef = ref(rtdb, 'sensors/box_001');
     const unsubscribe = onValue(sensorRef, (snapshot) => {
       setSensors(snapshot.val());
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Listen to alarm status from RTDB (/alarm/status)
+  useEffect(() => {
+    const unsubscribe = onAlarmStatus((status) => {
+      setAlarmActive(status);
     });
     return () => unsubscribe();
   }, []);
@@ -140,6 +149,54 @@ export function Dashboard() {
               <span className={clsx("material-symbols-outlined text-4xl animate-pulse", boxFirestore?.statut === 'en_mouvement' ? "text-primary" : "text-outline-variant")}>
                 {boxFirestore?.statut === 'en_mouvement' ? 'autorenew' : 'medical_services'}
               </span>
+            </div>
+          </div>
+
+          {/* Alarm Control (ESP32) */}
+          <div className={clsx(
+            "p-6 rounded-lg border space-y-4 transition-all",
+            alarmActive 
+              ? "bg-error/10 border-error shadow-lg shadow-error/20 animate-pulse" 
+              : "bg-surface-container border-outline-variant/30"
+          )}>
+            <h3 className="font-label-xl text-label-xl flex items-center gap-2">
+              <span className={clsx("material-symbols-outlined", alarmActive ? "text-error" : "text-primary")}>
+                {alarmActive ? 'alarm_on' : 'alarm'}
+              </span>
+              <span className={alarmActive ? "text-error" : "text-primary"}>Alarme ESP32</span>
+            </h3>
+            <p className="text-on-surface-variant text-sm">
+              {alarmActive 
+                ? "🔔 L'alarme est activée ! Le buzzer et la LED sont en marche." 
+                : "L'alarme est désactivée. Appuyez pour déclencher le rappel."}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={triggerAlarm}
+                disabled={alarmActive}
+                className={clsx(
+                  "flex-1 py-3 px-4 rounded-xl font-label-xl flex items-center justify-center gap-2 transition-all active:scale-95",
+                  alarmActive 
+                    ? "bg-outline-variant/30 text-outline cursor-not-allowed" 
+                    : "bg-error text-white shadow-lg hover:brightness-110"
+                )}
+              >
+                <span className="material-symbols-outlined">notifications_active</span>
+                Déclencher
+              </button>
+              <button
+                onClick={stopAlarm}
+                disabled={!alarmActive}
+                className={clsx(
+                  "flex-1 py-3 px-4 rounded-xl font-label-xl flex items-center justify-center gap-2 transition-all active:scale-95",
+                  !alarmActive 
+                    ? "bg-outline-variant/30 text-outline cursor-not-allowed" 
+                    : "bg-primary text-on-primary shadow-lg hover:brightness-110"
+                )}
+              >
+                <span className="material-symbols-outlined">alarm_off</span>
+                Arrêter
+              </button>
             </div>
           </div>
         </div>

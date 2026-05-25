@@ -1,7 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
-import { getDatabase, ref, set } from 'firebase/database';
+import { getDatabase, ref, set, onValue } from 'firebase/database';
 
 // trbt fireebase
 // Check for missing environment variables
@@ -117,6 +117,34 @@ export const updateSensorData = async (boxId: string, data: { temperature: numbe
   } catch (error) {
     console.error("Error updating sensor data: ", error);
   }
+};
+
+// ===== ALARM CONTROL (ESP32) =====
+// Writes to /alarm/status in RTDB — the ESP32 reads this path to trigger the buzzer + LED
+
+export const triggerAlarm = async () => {
+  try {
+    await set(ref(rtdb, 'alarm/status'), true);
+    console.log('Alarm triggered');
+  } catch (error) {
+    console.error('Error triggering alarm: ', error);
+  }
+};
+
+export const stopAlarm = async () => {
+  try {
+    await set(ref(rtdb, 'alarm/status'), false);
+    console.log('Alarm stopped');
+  } catch (error) {
+    console.error('Error stopping alarm: ', error);
+  }
+};
+
+export const onAlarmStatus = (callback: (status: boolean) => void) => {
+  const alarmRef = ref(rtdb, 'alarm/status');
+  return onValue(alarmRef, (snapshot) => {
+    callback(snapshot.val() === true);
+  });
 };
 
 export enum OperationType {

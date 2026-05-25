@@ -1,0 +1,5 @@
+{
+  "projects": {
+    "default": "projet-gaz-esp32"
+  }
+}

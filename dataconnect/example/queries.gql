@@ -1,0 +1,56 @@
+query CurrentUserMedications @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  medications(where: {userId: {eq_expr: "auth.uid"}}, orderBy: [{createdAt: DESC}]) {
+    id
+    name
+    dosage
+    frequency
+    startDate
+    endDate
+    instructions
+    notes
+    createdAt
+  }
+}
+
+mutation CreateNewMedication($name: String!, $dosage: String!, $frequency: String!, $startDate: Date!, $instructions: String, $notes: String, $endDate: Date) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  medication_insert(data: {
+    userId_expr: "auth.uid",
+    name: $name,
+    dosage: $dosage,
+    frequency: $frequency,
+    startDate: $startDate,
+    instructions: $instructions,
+    notes: $notes,
+    endDate: $endDate,
+    createdAt_expr: "request.time"
+  }) {
+    id
+  }
+}
+
+query UserAppointmentsForDate($date: Date!) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  appointments(where: {userId: {eq_expr: "auth.uid"}, date: {eq: $date}}, orderBy: [{time: ASC}]) {
+    id
+    title
+    date
+    time
+    doctorName
+    location
+    notes
+  }
+}
+
+mutation ScheduleNewAppointment($title: String!, $date: Date!, $time: String!, $doctorName: String!, $location: String, $notes: String) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  appointment_insert(data: {
+    userId_expr: "auth.uid",
+    title: $title,
+    date: $date,
+    time: $time,
+    doctorName: $doctorName,
+    location: $location,
+    notes: $notes,
+    createdAt_expr: "request.time"
+  }) {
+    id
+  }
+}
