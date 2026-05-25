@@ -17,6 +17,7 @@ import { Settings } from './pages/Settings';
 
 import { MedicalProfile } from './pages/MedicalProfile';
 import Landing from './pages/Landing';
+import { ReminderScheduler } from './components/ReminderScheduler';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -28,6 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 export default function App() {
   return (
     <AuthProvider>
+      <ReminderScheduler />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />

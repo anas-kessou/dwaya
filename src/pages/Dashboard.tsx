@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { ref, onValue } from 'firebase/database';
-import { db, rtdb, handleFirestoreError, OperationType, sendBoxCommand, triggerAlarm, stopAlarm, onAlarmStatus } from '../lib/firebase';
+import { db, rtdb, handleFirestoreError, OperationType, sendBoxCommand, triggerAlarm, stopAlarm, onAlarmStatus, dismissReminder } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
@@ -17,6 +17,7 @@ export function Dashboard() {
   const [selectedDay, setSelectedDay] = useState(0); // 0-6
   const [selectedLevel, setSelectedLevel] = useState(0); // 0-2 (Morning, Afternoon, Night)
   const [alarmActive, setAlarmActive] = useState(false);
+  const [activeReminder, setActiveReminder] = useState<any>(null);
 
   const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
   const levels = ['Matin', 'Après-midi', 'Soir'];
@@ -55,13 +56,15 @@ export function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  // Listen to alarm status from RTDB (/alarm/status)
+  // Listen to alarm status from RTDB (/alarm)
   useEffect(() => {
-    const unsubscribe = onAlarmStatus((status) => {
+    const unsubscribe = onAlarmStatus((status, data) => {
       setAlarmActive(status);
+      setActiveReminder(data);
     });
     return () => unsubscribe();
   }, []);
+
 
   const handleLoadMedicament = async () => {
     try {
@@ -152,7 +155,7 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Alarm Control (ESP32) */}
+          {/* Alarm Control (Phone & ESP32) */}
           <div className={clsx(
             "p-6 rounded-lg border space-y-4 transition-all",
             alarmActive 
@@ -161,42 +164,41 @@ export function Dashboard() {
           )}>
             <h3 className="font-label-xl text-label-xl flex items-center gap-2">
               <span className={clsx("material-symbols-outlined", alarmActive ? "text-error" : "text-primary")}>
-                {alarmActive ? 'alarm_on' : 'alarm'}
+                {alarmActive ? 'notifications_active' : 'notifications'}
               </span>
-              <span className={alarmActive ? "text-error" : "text-primary"}>Alarme ESP32</span>
+              <span className={alarmActive ? "text-error" : "text-primary"}>Rappel en cours</span>
             </h3>
-            <p className="text-on-surface-variant text-sm">
-              {alarmActive 
-                ? "🔔 L'alarme est activée ! Le buzzer et la LED sont en marche." 
-                : "L'alarme est désactivée. Appuyez pour déclencher le rappel."}
-            </p>
+            
+            {alarmActive && activeReminder ? (
+              <div className="bg-white/50 p-4 rounded-xl border border-error/20">
+                <p className="font-bold text-error">{activeReminder.medicineName}</p>
+                <p className="text-sm text-on-surface-variant">{activeReminder.dosage} • {activeReminder.quantity} comprimé(s)</p>
+                <p className="text-[10px] uppercase font-bold text-outline mt-2 tracking-widest">{activeReminder.layer}</p>
+              </div>
+            ) : (
+              <p className="text-on-surface-variant text-sm">
+                Aucune alarme active pour le moment.
+              </p>
+            )}
+
             <div className="flex gap-3">
-              <button
-                onClick={triggerAlarm}
-                disabled={alarmActive}
-                className={clsx(
-                  "flex-1 py-3 px-4 rounded-xl font-label-xl flex items-center justify-center gap-2 transition-all active:scale-95",
-                  alarmActive 
-                    ? "bg-outline-variant/30 text-outline cursor-not-allowed" 
-                    : "bg-error text-white shadow-lg hover:brightness-110"
-                )}
-              >
-                <span className="material-symbols-outlined">notifications_active</span>
-                Déclencher
-              </button>
-              <button
-                onClick={stopAlarm}
-                disabled={!alarmActive}
-                className={clsx(
-                  "flex-1 py-3 px-4 rounded-xl font-label-xl flex items-center justify-center gap-2 transition-all active:scale-95",
-                  !alarmActive 
-                    ? "bg-outline-variant/30 text-outline cursor-not-allowed" 
-                    : "bg-primary text-on-primary shadow-lg hover:brightness-110"
-                )}
-              >
-                <span className="material-symbols-outlined">alarm_off</span>
-                Arrêter
-              </button>
+              {alarmActive ? (
+                <button
+                  onClick={() => dismissReminder(activeReminder?.reminderId)}
+                  className="flex-1 py-4 bg-success text-white rounded-xl font-label-xl shadow-lg hover:brightness-110 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">check_circle</span>
+                  Valider la prise
+                </button>
+              ) : (
+                <button
+                  onClick={triggerAlarm}
+                  className="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-label-xl flex items-center justify-center gap-2 hover:bg-primary/5 active:scale-95"
+                >
+                  <span className="material-symbols-outlined">alarm</span>
+                  Test Alarme
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { getDatabase, ref, set, onValue } from 'firebase/database';
 
 // trbt fireebase
@@ -140,11 +140,54 @@ export const stopAlarm = async () => {
   }
 };
 
-export const onAlarmStatus = (callback: (status: boolean) => void) => {
-  const alarmRef = ref(rtdb, 'alarm/status');
+export const onAlarmStatus = (callback: (status: boolean, data?: any) => void) => {
+  const alarmRef = ref(rtdb, 'alarm');
   return onValue(alarmRef, (snapshot) => {
-    callback(snapshot.val() === true);
+    const val = snapshot.val();
+    if (val) {
+      callback(val.status === true, val.data);
+    } else {
+      callback(false);
+    }
   });
+};
+
+export const triggerReminderAlarm = async (reminderData: any) => {
+  try {
+    await set(ref(rtdb, 'alarm'), {
+      status: true,
+      data: {
+        medicineName: reminderData.medicineName,
+        dosage: reminderData.dosage,
+        quantity: reminderData.quantity,
+        layer: reminderData.layer,
+        reminderId: reminderData.id,
+        triggeredAt: new Date().toISOString()
+      },
+      lastUpdated: new Date().toISOString()
+    });
+    console.log('Alarm data updated in RTDB');
+  } catch (error) {
+    console.error('Error triggering alarm with data: ', error);
+  }
+};
+
+export const dismissReminder = async (reminderId: string, status: 'taken' | 'missed' | 'snoozed' = 'taken') => {
+  try {
+    // 1. Stop RTDB alarm
+    await set(ref(rtdb, 'alarm/status'), false);
+    
+    // 2. Update Firestore reminder status
+    await setDoc(doc(db, 'reminders', reminderId), {
+      status,
+      dismissedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    console.log(`Reminder ${reminderId} dismissed with status ${status}`);
+  } catch (error) {
+    console.error('Error dismissing reminder: ', error);
+  }
 };
 
 export enum OperationType {

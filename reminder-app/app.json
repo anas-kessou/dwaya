@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "reminder-app",
+    "slug": "reminder-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/icons/adaptive-icon.png"
+      },
+      "permissions": [
+        "VIBRATE",
+        "WAKE_LOCK"
+      ],
+      "package": "com.anaskessou.dwaya.reminder"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

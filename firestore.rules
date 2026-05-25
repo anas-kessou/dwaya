@@ -171,8 +171,6 @@ service cloud.firestore {
     }
 
     match /history/{historyId} {
-      // Must verify the medication exists and belongs to the user to avoid orphaned writes, 
-      // but to keep it simple, we check medication in UI. Let's use get() to enforce relational integrity.
       allow get: if isSignedIn() && existing().userId == request.auth.uid;
       allow list: if isSignedIn() && existing().userId == request.auth.uid;
       
@@ -180,7 +178,6 @@ service cloud.firestore {
                        isValidId(historyId) &&
                        isValidHistory(incoming()) &&
                        incoming().createdAt == request.time &&
-                       // Relational check: medication belongs to user
                        exists(/databases/$(database)/documents/medications/$(incoming().medicationId)) &&
                        get(/databases/$(database)/documents/medications/$(incoming().medicationId)).data.userId == request.auth.uid;
                        
@@ -191,8 +188,29 @@ service cloud.firestore {
                        incoming().userId == existing().userId &&
                        incoming().medicationId == existing().medicationId &&
                        incoming().createdAt == existing().createdAt &&
-                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'date', 'time']); // status might change from missed to taken
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'date', 'time']);
                        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // Reminder Validation
+    function isValidReminder(data) {
+      return data.keys().hasAll(['userId', 'medicationId', 'medicineName', 'dosage', 'quantity', 'layer', 'scheduledTime', 'status', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.medicationId is string &&
+             data.medicineName is string &&
+             data.dosage is string &&
+             data.quantity is number &&
+             data.layer is string && (data.layer == 'matin' || data.layer == 'apres-midi' || data.layer == 'soir') &&
+             data.scheduledTime is string &&
+             data.status is string && (data.status == 'pending' || data.status == 'ringing' || data.status == 'taken' || data.status == 'missed' || data.status == 'snoozed') &&
+             data.createdAt is timestamp;
+    }
+
+    match /reminders/{reminderId} {
+      allow get, list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidReminder(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidReminder(incoming());
       allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
   }

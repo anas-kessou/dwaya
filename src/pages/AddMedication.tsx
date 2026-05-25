@@ -14,6 +14,7 @@ export function AddMedication() {
   const [quantity, setQuantity] = useState(1);
   const [startDate, setStartDate] = useState('');
   const [durationDays, setDurationDays] = useState(7);
+  const [reminderTime, setReminderTime] = useState('08:00'); // New: Exact time
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
@@ -22,9 +23,17 @@ export function AddMedication() {
   const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
   const levels = ['Matin', 'Après-midi', 'Soir'];
 
+  const handleLayerSelect = (layer: 'matin' | 'apres-midi' | 'soir') => {
+    setSelectedLayer(layer);
+    // Suggest default times
+    if (layer === 'matin') setReminderTime('08:00');
+    if (layer === 'apres-midi') setReminderTime('14:00');
+    if (layer === 'soir') setReminderTime('20:00');
+  };
+
   const handleSubmit = async () => {
     if (!user || isSubmitting) return;
-    if (!name || !dosage || !startDate) {
+    if (!name || !dosage || !startDate || !reminderTime) {
       alert('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -39,6 +48,7 @@ export function AddMedication() {
         layer: selectedLayer,
         startDate,
         durationDays,
+        reminderTime, // New field saved to Firestore
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -142,7 +152,7 @@ export function AddMedication() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
               {/* Morning Card */}
               <button 
-                onClick={() => setSelectedLayer('matin')}
+                onClick={() => handleLayerSelect('matin')}
                 className={clsx(
                   "flex flex-col items-center gap-4 p-8 rounded-lg border-2 transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer",
                   selectedLayer === 'matin' ? "border-primary bg-primary-fixed shadow-md" : "border-outline-variant bg-surface-bright"
@@ -155,7 +165,7 @@ export function AddMedication() {
               
               {/* Afternoon Card */}
               <button 
-                onClick={() => setSelectedLayer('apres-midi')}
+                onClick={() => handleLayerSelect('apres-midi')}
                 className={clsx(
                   "flex flex-col items-center gap-4 p-8 rounded-lg border-2 transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer",
                   selectedLayer === 'apres-midi' ? "border-primary bg-primary-fixed shadow-md" : "border-outline-variant bg-surface-bright"
@@ -168,7 +178,7 @@ export function AddMedication() {
 
               {/* Evening Card */}
               <button 
-                onClick={() => setSelectedLayer('soir')}
+                onClick={() => handleLayerSelect('soir')}
                 className={clsx(
                   "flex flex-col items-center gap-4 p-8 rounded-lg border-2 transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer",
                   selectedLayer === 'soir' ? "border-primary bg-primary-fixed shadow-md" : "border-outline-variant bg-surface-bright"
@@ -181,16 +191,30 @@ export function AddMedication() {
             </div>
           </div>
 
-          {/* Step 3: Date & Duration */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-gutter">
-            <div>
-              <label className="block font-label-xl text-label-xl text-on-surface mb-2">Date de début</label>
-              <input 
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full h-16 px-6 text-body-lg rounded-xl border-2 border-outline-variant focus:border-primary bg-surface-bright outline-none" 
-                type="date" 
-              />
+          {/* Step 3: Date, Time & Duration */}
+          <div className="mt-12 space-y-gutter">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+              <div>
+                <label className="block font-label-xl text-label-xl text-on-surface mb-2">Date de début</label>
+                <input 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full h-16 px-6 text-body-lg rounded-xl border-2 border-outline-variant focus:border-primary bg-surface-bright outline-none" 
+                  type="date" 
+                />
+              </div>
+              <div>
+                <label className="block font-label-xl text-label-xl text-on-surface mb-2">Heure exacte du rappel</label>
+                <div className="relative">
+                  <input 
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    className="w-full h-16 px-6 text-body-lg rounded-xl border-2 border-outline-variant focus:border-primary bg-surface-bright outline-none" 
+                    type="time" 
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">schedule</span>
+                </div>
+              </div>
             </div>
             <div>
               <label className="block font-label-xl text-label-xl text-on-surface mb-2">Durée du traitement</label>
