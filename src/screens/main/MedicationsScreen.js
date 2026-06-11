@@ -42,11 +42,12 @@ export default function MedicationsScreen({ navigation }) {
               // 1. Delete from Firebase
               await deleteDoc(doc(db, 'medications', med.id));
               
-              // 2. Cancel the Native Alarm! (Crucial to prevent ghost alarms)
+              // 2. Cancel all Native Alarms for this medication
               if (med.times && med.times.length > 0) {
-                // We format the ID exactly as we scheduled it in AddMedication
-                const alarmId = `${med.id}-${med.times[0]}`; 
-                await notifee.cancelNotification(alarmId);
+                for (const time of med.times) {
+                  const alarmId = `${med.id}-${time}`;
+                  await notifee.cancelNotification(alarmId);
+                }
               }
             } catch (err) {
               console.error("Error deleting: ", err);

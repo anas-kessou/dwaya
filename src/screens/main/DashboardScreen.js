@@ -109,12 +109,21 @@ export default function DashboardScreen({ navigation }) {
 
       {/* Overview Card */}
       <View style={tw`mx-5 bg-blue-600 rounded-3xl p-5 mb-5 shadow-lg shadow-blue-200`}>
-        <Text style={tw`text-sm font-medium text-blue-100`}>Today's Progress</Text>
-        <View style={tw`flex-row items-end`}>
-          <Text style={tw`text-4xl font-black text-white mt-1`}>
-            {medications.filter(m => m.inventory_count < 10).length} 
-          </Text>
-          <Text style={tw`text-sm text-blue-100 mb-1 ml-2`}>items need attention</Text>
+        <Text style={tw`text-sm font-medium text-blue-100`}>Medication Status</Text>
+        <View style={tw`flex-row items-center justify-between`}>
+          <View>
+            <View style={tw`flex-row items-end`}>
+              <Text style={tw`text-4xl font-black text-white mt-1`}>
+                {medications.length} 
+              </Text>
+              <Text style={tw`text-sm text-blue-100 mb-1 ml-2`}>active drugs</Text>
+            </View>
+          </View>
+          {medications.some(m => m.inventory_count <= (m.refill_reminder || 5)) && (
+            <View style={tw`bg-white/20 px-3 py-1 rounded-full`}>
+              <Text style={tw`text-white font-bold text-xs`}>⚠️ Low Stock</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -154,7 +163,14 @@ export default function DashboardScreen({ navigation }) {
               <Pill color="#3B82F6" size={20} />
             </View>
             <View style={tw`flex-1`}>
-              <Text style={tw`font-bold text-gray-900`}>{item.name}</Text>
+              <View style={tw`flex-row items-center`}>
+                <Text style={tw`font-bold text-gray-900`}>{item.name}</Text>
+                {item.inventory_count <= (item.refill_reminder || 5) && (
+                  <View style={tw`ml-2 bg-red-100 px-2 py-0.5 rounded-full`}>
+                    <Text style={tw`text-[10px] font-bold text-red-600`}>LOW</Text>
+                  </View>
+                )}
+              </View>
               <Text style={tw`text-xs text-gray-500`}>{item.strength} · {item.times?.[0] || 'As needed'}</Text>
             </View>
             <TouchableOpacity 

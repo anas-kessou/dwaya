@@ -110,6 +110,20 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {/* LOGOUT */}
+        <TouchableOpacity 
+          onPress={logout}
+          style={tw`flex-row items-center justify-center p-4 mt-6 bg-red-50 rounded-2xl border border-red-100 mb-6`}
+        >
+          <LogOut color="#EF4444" size={20} />
+          <Text style={tw`ml-2 text-red-600 font-bold`}>Log Out</Text>
+        </TouchableOpacity>
+
+        {/* Version Info */}
+        <View style={tw`items-center`}>
+          <Text style={tw`text-xs text-gray-400 font-medium`}>Dwaya App v1.0.0</Text>
+          <Text style={tw`text-[10px] text-gray-300 mt-1`}>Built with React Native & Firebase</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
